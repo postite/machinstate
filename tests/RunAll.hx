@@ -7,8 +7,9 @@ class RunAll{
    public static function main(){
 
       utest.UTest.run([
-        // new TestBase(),
-         new TestOtherConds()
+         new TestBase(),
+         new TestOtherConds(),
+         new TestFollow()
          ]);
    }
 
@@ -34,6 +35,12 @@ class TestBase extends utest.Test{
 
    function testtest(){
       Assert.isTrue(1==1);
+   }
+
+   function testFindState(){
+      var r= MockStateA;
+     var state= fsm.getStateByClass(r);
+      Assert.notNull(state);
    }
 
    function testnext(){     
@@ -72,6 +79,38 @@ class TestOtherConds extends utest.Test{
    }
 
 }
+
+
+@:access(machine.FSM)
+class TestFollow extends utest.Test{
+   var fsm:machine.FSM;
+   function setup(){
+         fsm= new FSM();
+         fsm.following=true;
+
+         fsm.add(MockStateD,[
+         {cond:Sbool(false),state:MockStateB},
+         {cond:Val(null),state:MockStateA}
+         ]);
+
+         // fsm.add(MockStateA,[
+         // {cond:Sbool(true),state:MockStateB},
+         // ]);
+   }
+
+   function testValue(){
+      fsm.next();
+      Assert.equals(2,fsm.payload);
+   }
+
+   function testFollow(){
+      fsm.next();
+      Assert.same(MockStateA,Type.getClass(fsm.getState(fsm.currentStateId)));
+   }
+
+}
+
+
 
 class MockStateA extends machine.FSM.StateBase{
 

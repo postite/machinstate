@@ -10,6 +10,7 @@ enum StateCond{
 }
 
 typedef Toz={
+   ?id:String,
    state:StateBaseClass,
    cond:StateCond
 }
@@ -19,6 +20,9 @@ class FSM{
 
   public var currentStateId:String;
   public var prevStateId:String;
+  //active following
+   public var following:Bool= false;
+
 
    var tozMap:Map<String,Array<Toz>>;
    var stateMap:Map<String,StateBase>;
@@ -34,24 +38,34 @@ class FSM{
    }
 
    public function add(s:StateBaseClass,toz:Array<Toz>){
-        var id=generateId();
-        var state=Type.createInstance(s,[id,this]);
-        stateMap.set(id,state);
+
+         //following beahaviour
+         if(following)return addF(s,toz);
         
+        //var state=Type.createInstance(s,[id,this]);
+        var state=createStateInstance(s);
+        var id=state.id;
+        stateMap.set(id,state);        
         tozMap.set(id,toz);
-
         curList.add(id);
+        
         iter=curList.iterator(); 
+   }
 
+   function createStateInstance(s:StateBaseClass):StateBase{
+      var id=generateId();
+       var state=Type.createInstance(s,[id,this]);
+       return state;
    }
 
    public function answer(id,cond:StateCond){
+         //following beahaviour
+         if(following)return answerF(id,cond);
+
       trace("answer " +id);
-      
          switch(chooseToz(id,cond)){
             case Some(v):
-                  trace("next is" + v);
-                  
+                  trace("next is" + v);                  
                   next();
             case None: 
                trace( "nope");
@@ -106,6 +120,77 @@ class FSM{
    function getState(id:String):StateBase{
       return stateMap.get(id);
    }
+   function getId(stateclass:StateBaseClass):Option<String>{
+      var exists= (Lambda.find(stateMap, base->
+        Std.is(base,stateclass)
+      ));
+      if (exists!=null)
+         return Some(exists.id);
+         return None;
+   }
+
+   function getClassbyState(state:StateBase):StateBaseClass{
+      return Type.getClass(state);
+   }
+
+   function getStateByClass(stateclass:StateBaseClass):Option<StateBase>{
+      return switch getId(stateclass){
+         case Some(id):
+            Some(getState(id));
+         case None:
+            None;
+      }
+   }
+
+   public function answerF(id,cond:StateCond){
+      trace("answerF " +id);
+         switch(chooseToz(id,cond)){
+            case Some(v):
+                  trace("follow is" + v);
+                  switch(getStateByClass(v)){
+                     case Some(s):
+                        follow(s);
+                     case None:
+                        var state= createStateInstance(v);
+                        stateMap.set(state.id,state);
+                        follow(state);
+                  }
+                  
+            case None: 
+               trace( "nope");
+         }
+
+   }
+
+  
+
+   public function addF(s:StateBaseClass,toz:Array<Toz>){
+      var id=generateId();
+      var state=Type.createInstance(s,[id,this]);
+      stateMap.set(id,state);
+      tozMap.set(id,toz);
+      curList.add(id);
+      iter=curList.iterator();
+   }
+
+   public function follow(s:StateBase){
+      //memo
+      if (currentStateId!=null)
+      prevStateId=currentStateId;
+
+      var curstate=s;
+      currentStateId=s.id;
+      
+      if( payload!=null){
+         curstate.set_Payload(payload);
+      }
+      curstate.enter(payload);
+      #if tested
+         trace( "tested");
+         getState(currentStateId).resolve();
+      #end
+
+   }
 
    public function next(){
       trace( "next" +curList.length);
@@ -147,7 +232,11 @@ interface IState{
 @:allow(FSM)
 class StateBase implements IState{
 
-   var id:String; /// done by FSM
+   @:isVar public var id(get,null):String; /// done by FSM
+
+   function get_id():String 
+      return return id;
+
    var fsm:FSM;
    var payload:Promise<Dynamic>;
    var pt=Promise.trigger();
