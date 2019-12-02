@@ -90,7 +90,7 @@ class FSM{
                   trace(a.cond.getName() == cond.getName());
                   if(a.cond.getName()==cond.getName()){
                      payload=cond.getParameters()[0];
-                     trace( "payload="+payload);
+                     trace( "payloade="+payload);
                      return Some(a.state);
                    break;
                }
@@ -120,8 +120,9 @@ class FSM{
          }
          trace( "------------------payload="+payload);
          
-         curstate.enter();
+         curstate.enter(payload);
          #if tested
+         trace( "tested");
          getState(currentStateId).resolve();
          #end
          }catch(msg:Any){
@@ -159,12 +160,13 @@ class StateBase implements IState{
    public function set_Payload(n){
       payload=pt.resolve(n);
    }
-   public function enter(){
-      throw 'override me';
+   public function enter(payload:Any){
+     
    }
    public function resolve():StateCond{
       //fsm.answer(true);
-      throw 'override me';
+     // throw 'override me';
+     return null;
    }
 
 

@@ -59,13 +59,16 @@ class TestOtherConds extends utest.Test{
          fsm= new FSM();
          fsm.add(MockStateD,[
          {cond:Sbool(false),state:MockStateB},
-         {cond:Val(10),state:MockStateA}
+         {cond:Val(null),state:MockStateA}
          ]);
+         // fsm.add(MockStateA,[
+         // {cond:Sbool(true),state:MockStateB},
+         // ]);
    }
 
    function testValue(){
       fsm.next();
-      Assert.equals(10,fsm.payload);
+      Assert.equals(2,fsm.payload);
    }
 
 }
@@ -98,7 +101,12 @@ class MockStateC extends machine.FSM.StateBase{
 }
 
 class MockStateD extends machine.FSM.StateBase{
+
+   override function enter(payload){
+      trace("enter mockstateD");
+   }
    override function resolve():StateCond{
+      trace( "mockstateD resolve");
       fsm.answer(id, Val(2) );
       return null;
    }
