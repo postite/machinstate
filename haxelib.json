@@ -4,7 +4,7 @@
    "license": "MIT",
    "tags": ["fms"],
    "description": "pas fini state pachin",
-   "version": "0.0.2",
+   "version": "0.0.3",
    "classPath": "src/",
    "releasenote": "Initial release, everything is working correctly.",
    "contributors": ["postite"],

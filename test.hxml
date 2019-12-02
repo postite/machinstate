@@ -1,6 +1,7 @@
 -lib utest
 -cp tests
 -cp src
+-D tested
 -lib tink_core
 -main RunAll
  --interp

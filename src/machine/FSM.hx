@@ -112,9 +112,13 @@ class FSM{
          currentStateId=iter.next();
          trace('currentStateId = $currentStateId');
          try{
+            var curstate=getState(currentStateId);
          if( payload!=null)
-         getState(currentStateId).set_Payload(payload);
+         curstate.set_Payload(payload);
+         curstate.enter();
+         #if tested
          getState(currentStateId).resolve();
+         #end
          }catch(msg:Any){
             trace(msg);
          }
@@ -149,6 +153,9 @@ class StateBase implements IState{
    }
    public function set_Payload(n){
       payload=pt.resolve(n);
+   }
+   public function enter(){
+      throw 'override me';
    }
    public function resolve():StateCond{
       //fsm.answer(true);
