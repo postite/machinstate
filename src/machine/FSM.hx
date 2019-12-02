@@ -79,7 +79,7 @@ class FSM{
             case Sbool(b):
                trace(a.cond +"="+cond);
                if(Type.enumEq(a.cond,cond)){
-                  payload=b;
+                  payload=cond.getParameters()[0];
                 return Some(a.state);
                   break;
                }
@@ -89,8 +89,8 @@ class FSM{
                   trace(a.cond.getName());
                   trace(a.cond.getName() == cond.getName());
                   if(a.cond.getName()==cond.getName()){
-                     payload=v;
-                     
+                     payload=cond.getParameters()[0];
+                     trace( "payload="+payload);
                      return Some(a.state);
                    break;
                }
