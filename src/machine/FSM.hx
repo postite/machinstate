@@ -84,12 +84,13 @@ class FSM{
                   break;
                }
                 None;
-            case Val(b):
+            case Val(v):
                   trace(a.cond +"="+cond);
                   trace(a.cond.getName());
                   trace(a.cond.getName() == cond.getName());
                   if(a.cond.getName()==cond.getName()){
-                     payload=b;
+                     payload=v;
+                     
                      return Some(a.state);
                    break;
                }
@@ -98,6 +99,7 @@ class FSM{
          }
 
       }
+      
       return ret;
    }
 
@@ -112,9 +114,12 @@ class FSM{
          currentStateId=iter.next();
          trace('currentStateId = $currentStateId');
          try{
-            var curstate=getState(currentStateId);
-         if( payload!=null)
+         var curstate=getState(currentStateId);   
+         if( payload!=null){
          curstate.set_Payload(payload);
+         }
+         trace( "------------------payload="+payload);
+         
          curstate.enter();
          #if tested
          getState(currentStateId).resolve();
