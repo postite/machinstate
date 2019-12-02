@@ -1,0 +1,6 @@
+-lib utest
+-cp tests
+-cp src
+-lib tink_core
+-main RunAll
+ --interp
