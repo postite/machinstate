@@ -59,6 +59,7 @@ class FSM{
    }
 
    public function answer(id,cond:StateCond){
+      if (id==prevStateId)return; // evite les doublons
          //following beahaviour
          if(following)return answerF(id,cond);
 
@@ -143,6 +144,7 @@ class FSM{
    }
 
    public function answerF(id,cond:StateCond){
+      
       trace("answerF " +id);
          switch(chooseToz(id,cond)){
             case Some(v):
