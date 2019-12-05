@@ -9,6 +9,7 @@ class RunAll{
       utest.UTest.run([
          new TestBase(),
          new TestOtherConds(),
+         new TestNamed(),
          new TestFollow()
          ]);
    }
@@ -26,11 +27,17 @@ class TestBase extends utest.Test{
       fsm.add(MockStateC,[
          {cond:Sbool(false),state:MockStateA},
          {cond:Sbool(true),state:MockStateB}
-         ]);
+         ,]);
       fsm.add(MockStateB,[
          {cond:Sbool(true),state:MockStateA},
          {cond:Sbool(false),state:MockStateC}
-         ]);
+         ], "stateB" );
+      fsm.add(MockStateName,[
+         {cond:Named("MockStateA"),state:MockStateA},
+         {cond:Named('stateB'),state:MockStateC}
+         ]
+         );
+      
    }
 
    function testtest(){
@@ -53,8 +60,43 @@ class TestBase extends utest.Test{
       Assert.equals(fsm.currentStateId,fsm.curList.last());
    }
 
+   
+
    function teardown(){
       fsm=null;
+   }
+
+}
+
+@:access(machine.FSM)
+class TestNamed extends utest.Test{
+   var fsm:machine.FSM;
+   function setup(){
+         fsm= new FSM();
+         fsm.add(MockStateA,[
+         {cond:Sbool(true),state:MockStateB},        
+         ]);
+          fsm.add(MockStateB,[
+         {cond:Sbool(true),state:MockStateA},
+         ], "stateB" );
+
+         fsm.add(MockStateName,[
+         {cond:Named("MockStateD"),state:MockStateD},
+         {cond:Named('stateB'),state:MockStateC}
+         ]
+         );
+         fsm.add(MockStateD,[
+         {cond:Sbool(true),state:MockStateA}
+         ]
+         );
+         // fsm.add(MockStateA,[
+         // {cond:Sbool(true),state:MockStateB},
+         // ]);
+   }
+
+   function testhasName(){
+      fsm.next();
+      Assert.equals("MockStateD",fsm.currentStateName);
    }
 
 }
@@ -79,7 +121,6 @@ class TestOtherConds extends utest.Test{
    }
 
 }
-
 
 @:access(machine.FSM)
 class TestFollow extends utest.Test{
@@ -114,8 +155,8 @@ class TestFollow extends utest.Test{
 
 class MockStateA extends machine.FSM.StateBase{
 
-   function new(id,fsm){
-      super(id,fsm);
+   function new(id,fsm,name){
+      super(id,fsm,name);
 
    }
 
@@ -147,6 +188,18 @@ class MockStateD extends machine.FSM.StateBase{
    override function resolve():StateCond{
       trace( "mockstateD resolve");
       fsm.answer(id, Val(2) );
+      return null;
+   }
+}
+
+class MockStateName extends machine.FSM.StateBase{
+
+   override function enter(payload){
+      trace("enter mockstateName");
+   }
+   override function resolve():StateCond{
+      trace( "mockstateD resolve");
+      fsm.answer(id, Named("stateB") );
       return null;
    }
 }

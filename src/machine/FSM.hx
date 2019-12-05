@@ -3,16 +3,18 @@ using tink.CoreApi;
 import haxe.ds.List;
 import haxe.ds.Option;
 using haxe.EnumTools.EnumValueTools;
-
+using haxe.io.Path;
 enum StateCond{
    Sbool(b:Bool);
    Val(n:Any);
+   Named(n:String);
 }
 
 typedef Toz={
    ?id:String,
    state:StateBaseClass,
-   cond:StateCond
+   cond:StateCond,
+   
 }
 typedef StateBaseClass=Class<StateBase>;
 
@@ -23,7 +25,7 @@ class FSM{
   //active following
    public var following:Bool= false;
 
-
+   public var currentStateName:String;
    var tozMap:Map<String,Array<Toz>>;
    var stateMap:Map<String,StateBase>;
    var curList:haxe.ds.List<String>;
@@ -37,13 +39,15 @@ class FSM{
       curList=new List();
    }
 
-   public function add(s:StateBaseClass,toz:Array<Toz>){
+   public function add(s:StateBaseClass,toz:Array<Toz>,?name:String){
 
          //following beahaviour
          if(following)return addF(s,toz);
-        
+
+         if (name==null)
+         name= Type.getClassName(s).split(".").pop();//get name;
         //var state=Type.createInstance(s,[id,this]);
-        var state=createStateInstance(s);
+        var state=createStateInstance(s,name);
         var id=state.id;
         stateMap.set(id,state);        
         tozMap.set(id,toz);
@@ -52,9 +56,9 @@ class FSM{
         iter=curList.iterator(); 
    }
 
-   function createStateInstance(s:StateBaseClass):StateBase{
+   function createStateInstance(s:StateBaseClass,?name:String):StateBase{
       var id=generateId();
-       var state=Type.createInstance(s,[id,this]);
+       var state=Type.createInstance(s,[id,this,name]);
        return state;
    }
 
@@ -100,7 +104,8 @@ class FSM{
                }
                 None;
             case Val(v):
-                  trace(a.cond +"="+cond);
+
+                  trace( "val"+a.cond +"="+cond);
                   trace(a.cond.getName());
                   trace(a.cond.getName() == cond.getName());
                   if(a.cond.getName()==cond.getName()){
@@ -108,9 +113,23 @@ class FSM{
                      trace( "payloade="+payload);
                      return Some(a.state);
                    break;
-               }
+                  }
+               
                None;
-            
+               case Named(n):
+                  trace( "Named"+a.cond +"="+cond);
+                  return switch(getStateByClass(a.state)){
+                     case Some(s):
+                     if(s.name==n)
+                      return Some(a.state);
+                      break;
+                      
+                     case None:
+                     None;
+                  }
+                  
+               None;
+
          }
 
       }
@@ -182,6 +201,7 @@ class FSM{
 
       var curstate=s;
       currentStateId=s.id;
+      currentStateName=s.name;
       
       if( payload!=null){
          curstate.set_Payload(payload);
@@ -199,9 +219,12 @@ class FSM{
       if (iter.hasNext()){
          trace( "hasnext");
          currentStateId=iter.next();
+
          trace('currentStateId = $currentStateId');
          try{
-         var curstate=getState(currentStateId);   
+         var curstate=getState(currentStateId);
+         currentStateName=curstate.name;
+         trace("currentStateName"+currentStateName);
          if( payload!=null){
          curstate.set_Payload(payload);
          }
@@ -236,14 +259,17 @@ class StateBase implements IState{
 
    @:isVar public var id(get,null):String; /// done by FSM
 
+   @:isVar public var name(default,null):String; //done by FSM
+
    function get_id():String 
       return return id;
 
    var fsm:FSM;
    var payload:Promise<Dynamic>;
    var pt=Promise.trigger();
-   private function new(id,fsm){
+   private function new(id:String,fsm:FSM,name:String){
       this.id=id;
+      this.name=name;
       this.fsm=fsm;
       payload=pt.asPromise();
 
