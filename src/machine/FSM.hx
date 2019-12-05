@@ -117,18 +117,14 @@ class FSM{
                
                None;
                case Named(n):
-                  trace( "Named"+a.cond +"="+cond);
-                  return switch(getStateByClass(a.state)){
-                     case Some(s):
-                     if(s.name==n)
-                      return Some(a.state);
-                      break;
-                      
-                     case None:
-                     None;
-                  }
-                  
-               None;
+                  trace(a.cond +"="+cond);
+               if(Type.enumEq(a.cond,cond)){
+                  payload=cond.getParameters()[0];
+                return Some(a.state);
+                  break;
+               }
+                None;
+              
 
          }
 
