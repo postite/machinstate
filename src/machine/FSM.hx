@@ -4,7 +4,8 @@ import haxe.ds.List;
 import haxe.ds.Option;
 using haxe.EnumTools.EnumValueTools;
 using haxe.io.Path;
-enum StateCond{
+
+enum StateCond {
    Sbool(b:Bool);
    Val(n:Any);
    Named(n:String);
@@ -26,6 +27,7 @@ class FSM{
    public var following:Bool= false;
 
    public var currentStateName:String;
+   var curstate:StateBase;
    var tozMap:Map<String,Array<Toz>>;
    var stateMap:Map<String,StateBase>;
    var curList:haxe.ds.List<String>;
@@ -78,7 +80,7 @@ class FSM{
 
    }
 
-   function generateId():String{
+   public static function generateId():String{
       var alf="abcedfefghigjijbytvghgdysdsdd";
       var _id= "";
       for ( a in 0 ... 5){
@@ -194,14 +196,17 @@ class FSM{
       //memo
       if (currentStateId!=null)
       prevStateId=currentStateId;
+      if(curstate!=null)
+      curstate.exit();
 
-      var curstate=s;
+      curstate=s;
       currentStateId=s.id;
       currentStateName=s.name;
       
       if( payload!=null){
          curstate.set_Payload(payload);
       }
+      
       curstate.enter(payload);
       #if tested
          trace( "tested");
@@ -217,8 +222,10 @@ class FSM{
          currentStateId=iter.next();
 
          trace('currentStateId = $currentStateId');
+         if( curstate!=null)
+         curstate.exit();
          try{
-         var curstate=getState(currentStateId);
+          curstate=getState(currentStateId);
          currentStateName=curstate.name;
          trace("currentStateName"+currentStateName);
          if( payload!=null){
@@ -275,6 +282,9 @@ class StateBase implements IState{
    }
    public function enter(payload:Any){
      
+   }
+   public function exit(){
+
    }
    public function resolve():StateCond{
       //fsm.answer(true);
